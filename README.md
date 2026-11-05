@@ -143,7 +143,9 @@ Azure authentication uses OIDC, not a stored password or publish profile:
 
 - Managed identity: `id-queuevisualizer-dev-swedencentral-001`.
 - Federated issuer: `https://token.actions.githubusercontent.com`.
-- Trusted subject: `repo:HVA-NextGen/queuevisualizer:ref:refs/heads/main`.
+- Trusted subject:
+  `repo:HVA-NextGen@319864792/queuevisualizer@1447344833:ref:refs/heads/main`.
+  GitHub includes the organization and repository IDs in this token subject.
 - Audience: `api://AzureADTokenExchange`.
 - Role: **Website Contributor**, scoped only to
   `app-queuevisualizer-dev-swedencentral-001`.
