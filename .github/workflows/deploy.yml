@@ -1,0 +1,68 @@
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: queuevisualizer-webapp
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AZURE_CORE_ONLY_SHOW_ERRORS: 'true'
+      WEBSITE_URL: https://app-queuevisualizer-dev-swedencentral-001.azurewebsites.net
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test dashboard
+        run: npm test
+
+      - name: Build and type-check
+        run: npm run build
+
+      - name: Test production server
+        run: npm run test:hosting
+
+      - name: Sign in to Azure with OIDC
+        uses: azure/login@053f7285eb20bf5469ef084617b0b24d3cec53fc # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy application code
+        shell: pwsh
+        run: ./scripts/deploy.ps1 -CodeOnly -Subscription '${{ vars.AZURE_SUBSCRIPTION_ID }}'
+
+      - name: Verify public website
+        run: |
+          curl --fail --silent --show-error --retry 8 --retry-delay 10 \
+            --retry-all-errors --max-time 60 "$WEBSITE_URL" \
+            --output "$RUNNER_TEMP/queuevisualizer.html"
+          grep -q 'Kuormitusmittari' "$RUNNER_TEMP/queuevisualizer.html"
+          printf '### Deployed\n\n[Open Kuormitusmittari](%s)\n' "$WEBSITE_URL" >> "$GITHUB_STEP_SUMMARY"

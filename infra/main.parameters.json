@@ -1,0 +1,9 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": { "value": "swedencentral" },
+    "planName": { "value": "asp-queuevisualizer-dev-swedencentral-001" },
+    "appName": { "value": "app-queuevisualizer-dev-swedencentral-001" }
+  }
+}
